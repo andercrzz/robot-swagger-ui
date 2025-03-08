@@ -58,6 +58,34 @@ class _HomeState extends State<Home> {
           ),
         ],
       ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.deepPurple,
+              ),
+              child: Text(
+                'Categorías',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                ),
+              ),
+            ),
+            ...categories.map((category) {
+              return ListTile(
+                title: Text(category.nombre),
+                onTap: () {
+                  Navigator.pop(context); // Cierra el drawer
+                  getProducts(category.nombre);
+                },
+              );
+            }).toList(),
+          ],
+        ),
+      ),
       body: Container(
         margin: EdgeInsets.only(left: 20.0, top: 40.0),
         child: Column(
