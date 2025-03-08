@@ -51,6 +51,22 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Home'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.shopping_cart),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => CartPage(onCartUpdated: () {
+                  setState(() {});
+                })),
+              );
+            },
+          ),
+        ],
+      ),
       body: Row(
         children: [
           Container(
@@ -135,21 +151,35 @@ class _HomeState extends State<Home> {
                     ),
                   ),
                   SizedBox(height: 20.0),
-                  Text(
-                    'Total: \$${getTotalPrice().toStringAsFixed(2)}',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 10.0),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => CartPage(onCartUpdated: () {
-                          setState(() {});
-                        })),
-                      );
-                    },
-                    child: Text('Terminar compra'),
+                  Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Total: ${getTotalPrice().toStringAsFixed(2)}€',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(width: 10.0),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => CartPage(onCartUpdated: () {
+                                setState(() {});
+                              })),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green, // Cambia el color del botón
+                            padding: EdgeInsets.symmetric(horizontal: 30, vertical: 20), // Tamaño del botón
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10), // Bordes redondeados
+                            ),
+                          ),
+                          child: Text('Terminar compra', style: TextStyle(fontSize: 16)),
+                        ),
+                      ],
+                    ),
                   ),
                 ]
               )
@@ -170,7 +200,7 @@ class _HomeState extends State<Home> {
       child: track == categoryIndex ? Container(
         padding: EdgeInsets.only(left: 20.0, right: 20.0),
         margin: EdgeInsets.only(right: 20.0),
-        decoration: BoxDecoration(color: Color.fromARGB(255, 128, 189, 255), borderRadius: BorderRadius.circular(30.0)),
+        decoration: BoxDecoration(color: Color.fromARGB(168, 56, 39, 23), borderRadius: BorderRadius.circular(30.0)),
         child: Row(
           children: [
             Image.asset(
@@ -239,7 +269,7 @@ class ProductTile extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Text(
-              '\$${product.precio}',
+              '${product.precio}€',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
@@ -290,7 +320,7 @@ class _CartPageState extends State<CartPage> {
                     fit: BoxFit.cover,
                   ),
                   title: Text(product.nombre),
-                  subtitle: Text('Precio: \$${product.precio}'),
+                  subtitle: Text('Precio: ${product.precio}€'),
                   trailing: IconButton(
                     icon: Icon(Icons.remove_circle),
                     onPressed: () {
