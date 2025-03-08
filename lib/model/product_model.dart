@@ -1,12 +1,14 @@
 class ProductModel {
   String nombre;
   String precio;
+  String imagen;
   String descripcion;
   String tiempoDeEsperaEstimado;
 
   ProductModel({
     required this.nombre,
     required this.precio,
+    required this.imagen,
     required this.descripcion,
     required this.tiempoDeEsperaEstimado,
   });
@@ -16,6 +18,7 @@ class ProductModel {
     return ProductModel(
       nombre: data['nombre'] ?? '',
       precio: data['precio'] ?? '',
+      imagen: data['imagen'] ?? '',
       descripcion: data['descripcion'] ?? '',
       tiempoDeEsperaEstimado: data['tiempoDeEsperaEstimado'] ?? '',
     );
@@ -26,6 +29,7 @@ class ProductModel {
     return {
       'nombre': nombre,
       'precio': precio,
+      'imagen': imagen,
       'descripcion': descripcion,
       'tiempoDeEsperaEstimado': tiempoDeEsperaEstimado,
     };

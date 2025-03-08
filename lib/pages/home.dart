@@ -171,8 +171,8 @@ class ProductTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Image.asset(
-            "images/burger.png", // Asegúrate de tener una URL de imagen en tu modelo de producto
+          Image.network(
+            product.imagen, // Asegúrate de tener una URL de imagen en tu modelo de producto
             height: 100,
             width: double.infinity,
             fit: BoxFit.cover,
