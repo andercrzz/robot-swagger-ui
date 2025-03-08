@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:robot/model/category_model.dart';
 import 'package:robot/model/product_model.dart';
 import 'package:robot/pages/cart.dart';
-import 'package:robot/service/category_data.dart';
-import 'package:robot/service/widget_support.dart';
+import 'package:robot/service/cart.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:robot/pages/product_detail.dart'; // Importa la página de detalles
-import 'package:robot/service/cart.dart'; // Importa la clase Cart
+import 'package:robot/pages/product_detail.dart';
+import 'package:robot/service/widget_support.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -23,19 +22,23 @@ class _HomeState extends State<Home> {
   List<ProductModel> products = [];
   late FirebaseFirestore db;
 
-  getData() async {
-    QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection("productos").get();
-    products = querySnapshot.docs.map((doc) => ProductModel.fromFirestore(doc.data() as Map<String, dynamic>)).toList();
-    print(products.first.nombre);
+  @override
+  void initState() {
+    super.initState();
+    db = FirebaseFirestore.instance;
+    getCategories();
+  }
+
+  getCategories() async {
+    QuerySnapshot querySnapshot = await db.collection("categorias").get();
+    categories = querySnapshot.docs.map((doc) => CategoryModel.fromFirestore(doc.data() as Map<String, dynamic>)).toList();
     setState(() {});
   }
 
-  @override
-  void initState() {
-    db = FirebaseFirestore.instance;
-    getData();
-    categories = getCategories();
-    super.initState();
+  getProducts(String category) async {
+    QuerySnapshot querySnapshot = await db.collection(category).get();
+    products = querySnapshot.docs.map((doc) => ProductModel.fromFirestore(doc.data() as Map<String, dynamic>)).toList();
+    setState(() {});
   }
 
   @override
@@ -84,9 +87,14 @@ class _HomeState extends State<Home> {
                 itemCount: categories.length,
                 itemBuilder: (context, index){
                   return CategoryTile(
-                    categories[index].name!,
-                    categories[index].image!,
-                    index.toString(),);
+                    categories[index].nombre,
+                    //categories[index].image,
+                    "images/burger.png",
+                    index.toString(),
+                    onTap: () {
+                      getProducts(categories[index].nombre);
+                    },
+                  );
                 }),
             ),
             SizedBox(height: 20.0),
@@ -108,10 +116,11 @@ class _HomeState extends State<Home> {
     );
   }
 
-  Widget CategoryTile(String name, String image, String categoryIndex) {
+  Widget CategoryTile(String name, String image, String categoryIndex, {required VoidCallback onTap}) {
     return GestureDetector(
       onTap: () {
         track = categoryIndex.toString();
+        onTap();
         setState(() {});
       },
       child: track == categoryIndex ? Container(
