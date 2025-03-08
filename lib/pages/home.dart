@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:robot/model/category_model.dart';
 import 'package:robot/model/product_model.dart';
+import 'package:robot/pages/cart.dart';
 import 'package:robot/service/category_data.dart';
 import 'package:robot/service/widget_support.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:robot/pages/product_detail.dart'; // Importa la página de detalles
+import 'package:robot/service/cart.dart'; // Importa la clase Cart
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -38,6 +41,20 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Home'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.shopping_cart),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => CartPage()),
+              );
+            },
+          ),
+        ],
+      ),
       body: Container(
         margin: EdgeInsets.only(left: 20.0, top: 40.0),
         child: Column(
@@ -171,6 +188,15 @@ class ProductTile extends StatelessWidget {
               '\$${product.precio}',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Cart.addItem(product);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('${product.nombre} añadido a la cesta')),
+              );
+            },
+            child: Text('Añadir a la cesta'),
           ),
         ],
       ),
