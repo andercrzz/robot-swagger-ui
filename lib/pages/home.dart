@@ -30,6 +30,10 @@ class _HomeState extends State<Home> {
   getCategories() async {
     QuerySnapshot querySnapshot = await db.collection("categorias").get();
     categories = querySnapshot.docs.map((doc) => CategoryModel.fromFirestore(doc.data() as Map<String, dynamic>)).toList();
+    if (categories.isNotEmpty) {
+      getProducts(categories[0].nombre); // Cargar productos de la primera categoría
+      track = "0"; // Seleccionar la primera categoría
+    }
     setState(() {});
   }
 
@@ -81,6 +85,8 @@ class _HomeState extends State<Home> {
                     title: Text(category.nombre, style: TextStyle(color: Colors.white)),
                     onTap: () {
                       getProducts(category.nombre);
+                      track = categories.indexOf(category).toString();
+                      setState(() {});
                     },
                   );
                 }).toList(),
