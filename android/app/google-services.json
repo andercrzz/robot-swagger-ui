@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "440291488110",
+    "project_id": "brazo-robot-cca62",
+    "storage_bucket": "brazo-robot-cca62.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:440291488110:android:d54e8632419c0721f1917f",
+        "android_client_info": {
+          "package_name": "com.example.robot"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA3oBYRH2ksIuvMDRwVTyDvKJOHB98CIok"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
