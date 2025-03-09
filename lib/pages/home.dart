@@ -72,40 +72,55 @@ class _HomeState extends State<Home> {
           Container(
             width: 250, // Ancho del menú lateral
             color: Color.fromARGB(168, 56, 39, 23),
-            child: ListView(
-              padding: EdgeInsets.zero,
+            child: Column(
               children: [
-                DrawerHeader(
-                  decoration: BoxDecoration(
-                    color: const Color.fromARGB(168, 56, 39, 23),
-                  ),
-                  child: Row(
+                Expanded(
+                  child: ListView(
+                    padding: EdgeInsets.zero,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Image.asset(
-                            "images/logo.png",
-                            height: 50,
-                            width: 110,
-                            fit: BoxFit.contain),
-                          Text("Order your favorite food",
-                            style: AppWidget.SimpleTextFieldStyle()
-                          ),
-                      ]),
+                      DrawerHeader(
+                        decoration: BoxDecoration(
+                          color: const Color.fromARGB(168, 56, 39, 23),
+                        ),
+                        child: Row(
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Image.asset(
+                                  "images/logo.png",
+                                  height: 50,
+                                  width: 110,
+                                  fit: BoxFit.contain),
+                                Text("Order your favorite food",
+                                  style: AppWidget.SimpleTextFieldStyle()
+                                ),
+                            ]),
+                          ],
+                        ),
+                      ),
+                      ...categories.map((category) {
+                        return ListTile(
+                          title: Text(category.nombre, style: TextStyle(color: Colors.white)),
+                          onTap: () {
+                            getProducts(category.nombre);
+                            track = categories.indexOf(category).toString();
+                            setState(() {});
+                          },
+                        );
+                      }).toList(),
                     ],
                   ),
                 ),
-                ...categories.map((category) {
-                  return ListTile(
-                    title: Text(category.nombre, style: TextStyle(color: Colors.white)),
-                    onTap: () {
-                      getProducts(category.nombre);
-                      track = categories.indexOf(category).toString();
-                      setState(() {});
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      _showAddCategoryDialog();
                     },
-                  );
-                }).toList(),
+                    child: Text('Añadir Categoría'),
+                  ),
+                ),
               ],
             ),
           ),
@@ -188,6 +203,63 @@ class _HomeState extends State<Home> {
         ],
       ),
     );
+  }
+
+  void _showAddCategoryDialog() {
+    final TextEditingController nameController = TextEditingController();
+    String? imagePath;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Añadir Nueva Categoría'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(labelText: 'Nombre de la Categoría'),
+              ),
+              SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: () async {
+                  // Implementar lógica para seleccionar imagen
+                  // imagePath = await _pickImage();
+                  imagePath = "images/burger.png";
+                },
+                child: Text('Seleccionar Imagen'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (nameController.text.isNotEmpty && imagePath != null) {
+                  _addCategory(nameController.text, imagePath!);
+                  Navigator.of(context).pop();
+                }
+              },
+              child: Text('Añadir'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _addCategory(String name, String imagePath) async {
+    print("Se está añadiendo la categoría $name con la imagen $imagePath");
+    final newCategory = CategoryModel(nombre: name, imagen: imagePath);
+    await db.collection('categorias').add(newCategory.toMap());
+    await db.collection(name).add({'initialized': true}); // Añadir una nueva colección con un documento inicial
+    getCategories();
   }
 
   Widget CategoryTile(String name, String image, String categoryIndex, {required VoidCallback onTap}) {
