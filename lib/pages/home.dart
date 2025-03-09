@@ -162,6 +162,9 @@ class _HomeState extends State<Home> {
                           onAddToCart: () {
                             setState(() {});
                           },
+                          onEdit: () {
+                            _showEditProductDialog(products[index], categories[int.parse(track)].nombre);
+                          },
                           onDelete: () {
                             _deleteProduct(products[index], categories[int.parse(track)].nombre);
                           },
@@ -293,6 +296,72 @@ class _HomeState extends State<Home> {
     );
   }
 
+  void _showEditProductDialog(ProductModel product, String categoryName) {
+  final TextEditingController nameController = TextEditingController(text: product.nombre);
+  final TextEditingController descriptionController = TextEditingController(text: product.descripcion);
+  final TextEditingController priceController = TextEditingController(text: product.precio);
+  final TextEditingController tiempoDeEsperaEstimadoController = TextEditingController(text: product.tiempoDeEsperaEstimado);
+  String? imagePath = product.imagen;
+  
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Editar Producto'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(labelText: 'Nombre del Producto'),
+              ),
+              TextField(
+                controller: descriptionController,
+                decoration: InputDecoration(labelText: 'Descripción del Producto'),
+              ),
+              TextField(
+                controller: priceController,
+                decoration: InputDecoration(labelText: 'Precio del Producto'),
+                keyboardType: TextInputType.number,
+              ),
+              TextField(
+                controller: tiempoDeEsperaEstimadoController,
+                decoration: InputDecoration(labelText: 'Tiempo de Espera Estimado'),
+                keyboardType: TextInputType.number,
+              ),
+              SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: () async {
+                  // Implementar lógica para seleccionar imagen
+                  // imagePath = await _pickImage();
+                  imagePath = "images/burger.png";
+                },
+                child: Text('Seleccionar Imagen'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (nameController.text.isNotEmpty && descriptionController.text.isNotEmpty && priceController.text.isNotEmpty && tiempoDeEsperaEstimadoController.text.isNotEmpty && imagePath != null) {
+                  _editProduct(product, categoryName, nameController.text, descriptionController.text, priceController.text, tiempoDeEsperaEstimadoController.text, imagePath!);
+                  Navigator.of(context).pop();
+                }
+              },
+              child: Text('Guardar'),
+                          ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _addCategory(String name, String imagePath) async {
     print("Se está añadiendo la categoría $name con la imagen $imagePath");
     final newCategory = CategoryModel(nombre: name, imagen: imagePath);
@@ -308,6 +377,22 @@ class _HomeState extends State<Home> {
     getProducts(categoryName);
   }
 
+  Future<void> _editProduct(ProductModel product, String categoryName, String name, String description, String price, String tiempoDeEsperaEstimado, String imagePath) async {
+    print("Se está editando el producto ${product.nombre} de la categoría $categoryName");
+    await db.collection(categoryName).where('nombre', isEqualTo: product.nombre).get().then((snapshot) {
+      for (DocumentSnapshot ds in snapshot.docs) {
+        ds.reference.update({
+          'nombre': name,
+          'descripcion': description,
+          'precio': price,
+          'tiempoDeEsperaEstimado': tiempoDeEsperaEstimado,
+          'imagen': imagePath,
+        });
+      }
+    });
+    getProducts(categoryName);
+  }
+  
   Future<void> _deleteCategory(CategoryModel category) async {
     print("Se está eliminando la categoría ${category.nombre}");
     await db.collection('categorias').where('nombre', isEqualTo: category.nombre).get().then((snapshot) {
@@ -381,9 +466,10 @@ class _HomeState extends State<Home> {
 class ProductTile extends StatelessWidget {
   final ProductModel product;
   final VoidCallback onAddToCart;
+  final VoidCallback onEdit;
   final VoidCallback onDelete;
 
-  const ProductTile({required this.product, required this.onAddToCart, required this.onDelete});
+  const ProductTile({required this.product, required this.onAddToCart, required this.onEdit, required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -430,6 +516,10 @@ class ProductTile extends StatelessWidget {
                   onAddToCart();
                 },
                 child: Text('Añadir a la cesta'),
+              ),
+              IconButton(
+                icon: Icon(Icons.edit),
+                onPressed: onEdit,
               ),
               IconButton(
                 icon: Icon(Icons.delete),
