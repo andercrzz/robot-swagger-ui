@@ -102,6 +102,12 @@ class _HomeState extends State<Home> {
                       ...categories.map((category) {
                         return ListTile(
                           title: Text(category.nombre, style: TextStyle(color: Colors.white)),
+                          trailing: IconButton(
+                            icon: Icon(Icons.delete, color: Colors.white),
+                            onPressed: () {
+                              _deleteCategory(category);
+                            },
+                          ),
                           onTap: () {
                             getProducts(category.nombre);
                             track = categories.indexOf(category).toString();
@@ -259,6 +265,22 @@ class _HomeState extends State<Home> {
     final newCategory = CategoryModel(nombre: name, imagen: imagePath);
     await db.collection('categorias').add(newCategory.toMap());
     await db.collection(name).add({'initialized': true}); // Añadir una nueva colección con un documento inicial
+    getCategories();
+  }
+
+  Future<void> _deleteCategory(CategoryModel category) async {
+    print("Se está eliminando la categoría ${category.nombre}");
+    await db.collection('categorias').where('nombre', isEqualTo: category.nombre).get().then((snapshot) {
+      for (DocumentSnapshot ds in snapshot.docs) {
+        ds.reference.delete();
+      }
+    });
+    await db.collection(category.nombre).get().then((snapshot) {
+      for (DocumentSnapshot ds in snapshot.docs) {
+        ds.reference.delete();
+      }
+    });
+    await db.collection(category.nombre).doc().delete(); // Eliminar la colección
     getCategories();
   }
 
