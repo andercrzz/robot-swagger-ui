@@ -51,22 +51,6 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Home'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.shopping_cart),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => CartPage(onCartUpdated: () {
-                  setState(() {});
-                })),
-              );
-            },
-          ),
-        ],
-      ),
       body: Row(
         children: [
           Container(
@@ -102,11 +86,22 @@ class _HomeState extends State<Home> {
                       ...categories.map((category) {
                         return ListTile(
                           title: Text(category.nombre, style: TextStyle(color: Colors.white)),
-                          trailing: IconButton(
-                            icon: Icon(Icons.delete, color: Colors.white),
-                            onPressed: () {
-                              _deleteCategory(category);
-                            },
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.add, color: Colors.white),
+                                onPressed: () {
+                                  _showAddProductDialog(category.nombre);
+                                },
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.delete, color: Colors.white),
+                                onPressed: () {
+                                  _deleteCategory(category);
+                                },
+                              ),
+                            ],
                           ),
                           onTap: () {
                             getProducts(category.nombre);
@@ -167,39 +162,11 @@ class _HomeState extends State<Home> {
                           onAddToCart: () {
                             setState(() {});
                           },
+                          onDelete: () {
+                            _deleteProduct(products[index], categories[int.parse(track)].nombre);
+                          },
                         );
                       },
-                    ),
-                  ),
-                  SizedBox(height: 20.0),
-                  Center(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Total: ${getTotalPrice().toStringAsFixed(2)}€',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                        ),
-                        SizedBox(width: 10.0),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => CartPage(onCartUpdated: () {
-                                setState(() {});
-                              })),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green, // Cambia el color del botón
-                            padding: EdgeInsets.symmetric(horizontal: 30, vertical: 20), // Tamaño del botón
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10), // Bordes redondeados
-                            ),
-                          ),
-                          child: Text('Terminar compra', style: TextStyle(fontSize: 16)),
-                        ),
-                      ],
                     ),
                   ),
                 ]
@@ -260,12 +227,85 @@ class _HomeState extends State<Home> {
     );
   }
 
+  void _showAddProductDialog(String categoryName) {
+    final TextEditingController nameController = TextEditingController();
+    final TextEditingController descriptionController = TextEditingController();
+    final TextEditingController priceController = TextEditingController();
+    final TextEditingController tiempoDeEsperaEstimadoController = TextEditingController();
+    String? imagePath;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Añadir Nuevo Producto'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(labelText: 'Nombre del Producto'),
+              ),
+              TextField(
+                controller: descriptionController,
+                decoration: InputDecoration(labelText: 'Descripción del Producto'),
+              ),
+              TextField(
+                controller: priceController,
+                decoration: InputDecoration(labelText: 'Precio del Producto'),
+                keyboardType: TextInputType.number,
+              ),
+              TextField(
+                controller: tiempoDeEsperaEstimadoController,
+                decoration: InputDecoration(labelText: 'Tiempo de Espera Estimado'),
+                keyboardType: TextInputType.number,
+              ),
+              SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: () async {
+                  // Implementar lógica para seleccionar imagen
+                  // imagePath = await _pickImage();
+                  imagePath = "images/burger.png";
+                },
+                child: Text('Seleccionar Imagen'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (nameController.text.isNotEmpty && descriptionController.text.isNotEmpty && priceController.text.isNotEmpty && tiempoDeEsperaEstimadoController.text.isNotEmpty && imagePath != null) {
+                  _addProduct(categoryName, nameController.text, descriptionController.text, priceController.text, tiempoDeEsperaEstimadoController.text, imagePath!);
+                  Navigator.of(context).pop();
+                }
+              },
+              child: Text('Añadir'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _addCategory(String name, String imagePath) async {
     print("Se está añadiendo la categoría $name con la imagen $imagePath");
     final newCategory = CategoryModel(nombre: name, imagen: imagePath);
     await db.collection('categorias').add(newCategory.toMap());
     await db.collection(name).add({'initialized': true}); // Añadir una nueva colección con un documento inicial
     getCategories();
+  }
+
+  Future<void> _addProduct(String categoryName, String name, String description, String price, String tiempoDeEsperaEstimado, String imagePath) async {
+    print("Se está añadiendo el producto $name a la categoría $categoryName");
+    final newProduct = ProductModel(nombre: name, descripcion: description, precio: price, tiempoDeEsperaEstimado: tiempoDeEsperaEstimado, imagen: imagePath);
+    await db.collection(categoryName).add(newProduct.toMap());
+    getProducts(categoryName);
   }
 
   Future<void> _deleteCategory(CategoryModel category) async {
@@ -282,6 +322,16 @@ class _HomeState extends State<Home> {
     });
     await db.collection(category.nombre).doc().delete(); // Eliminar la colección
     getCategories();
+  }
+
+  Future<void> _deleteProduct(ProductModel product, String categoryName) async {
+    print("Se está eliminando el producto ${product.nombre} de la categoría $categoryName");
+    await db.collection(categoryName).where('nombre', isEqualTo: product.nombre).get().then((snapshot) {
+      for (DocumentSnapshot ds in snapshot.docs) {
+        ds.reference.delete();
+      }
+    });
+    getProducts(categoryName);
   }
 
   Widget CategoryTile(String name, String image, String categoryIndex, {required VoidCallback onTap}) {
@@ -331,8 +381,9 @@ class _HomeState extends State<Home> {
 class ProductTile extends StatelessWidget {
   final ProductModel product;
   final VoidCallback onAddToCart;
+  final VoidCallback onDelete;
 
-  const ProductTile({required this.product, required this.onAddToCart});
+  const ProductTile({required this.product, required this.onAddToCart, required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -367,15 +418,24 @@ class ProductTile extends StatelessWidget {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
-          ElevatedButton(
-            onPressed: () {
-              Cart.addItem(product);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('${product.nombre} añadido a la cesta')),
-              );
-              onAddToCart();
-            },
-            child: Text('Añadir a la cesta'),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  Cart.addItem(product);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('${product.nombre} añadido a la cesta')),
+                  );
+                  onAddToCart();
+                },
+                child: Text('Añadir a la cesta'),
+              ),
+              IconButton(
+                icon: Icon(Icons.delete),
+                onPressed: onDelete,
+              ),
+            ],
           ),
         ],
       ),
